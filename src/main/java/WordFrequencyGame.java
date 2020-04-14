@@ -17,10 +17,8 @@ public class WordFrequencyGame {
     }
 
     private Map<String, Integer> wordCountReducer(List<WordCountEntry> wordCountReducerInput) {
-        Map<String, Integer> wordCountReducerOutput = wordCountReducerInput.stream()
+        return wordCountReducerInput.stream()
                 .collect(Collectors.toMap(WordCountEntry::getWord, WordCountEntry::getCount, Integer::sum));
-
-        return wordCountReducerOutput;
     }
 
     private String toOutputFormat(Map<String, Integer> wordCountMap) {
