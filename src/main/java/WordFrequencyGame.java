@@ -1,63 +1,45 @@
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class WordFrequencyGame {
     private static final String DELIMITER_FORMAT = "\\s+";
 
-    private List<WordInfo> wordInfoMapper(String inputSentence) {
+    private List<WordCountEntry> wordInfoMapper(String inputSentence) {
         String[] words = inputSentence.split(DELIMITER_FORMAT);
-        List<WordInfo> wordCountMapperOutput = new ArrayList<>();
+        List<WordCountEntry> wordCountMapperOutput = new ArrayList<>();
         
         for (String word : words) {
-            WordInfo wordInfo = new WordInfo(word, 1);
-            wordCountMapperOutput.add(wordInfo);
+            WordCountEntry wordCountEntry = new WordCountEntry(word, 1);
+            wordCountMapperOutput.add(wordCountEntry);
         }
 
         return wordCountMapperOutput;
     }
 
-    private List<WordInfo> wordCountReducer(List<WordInfo> wordInfoMapperOutput) {
-        Map<String, List<WordInfo>> map = getListMap(wordInfoMapperOutput);
-
-        List<WordInfo> list = new ArrayList<>();
-        for (Map.Entry<String, List<WordInfo>> entry : map.entrySet()) {
-            WordInfo wordInfo = new WordInfo(entry.getKey(), entry.getValue().size());
-            list.add(wordInfo);
-        }
-        List<WordInfo> wordCountReducerOutput  = list;
-        wordCountReducerOutput.sort((w1, w2) -> w2.getCount() - w1.getCount());
+    private Map<String, Integer> wordCountReducer(List<WordCountEntry> wordCountReducerInput) {
+        Map<String, Integer> wordCountReducerOutput = wordCountReducerInput.stream()
+                .collect(Collectors.toMap(WordCountEntry::getWord, WordCountEntry::getCount, Integer::sum));
 
         return wordCountReducerOutput;
     }
 
+    private String toOutputFormat(Map<String, Integer> wordCountMap) {
+        return wordCountMap.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .map(wordCountEntry -> wordCountEntry.getKey() + " " + wordCountEntry.getValue())
+                .collect(Collectors.joining("\n"));
+    }
 
-    public String getResult(String inputSentence) {
+
+    public String countWordFrequency(String inputSentence) {
         try {
-            List<WordInfo> wordInfoMapperOutput = wordInfoMapper(inputSentence);
-            List<WordInfo> wordInfoReducerOutput = wordCountReducer(wordInfoMapperOutput);
-
-            StringJoiner joiner = new StringJoiner("\n");
-            for (WordInfo w : wordInfoReducerOutput) {
-                String s = w.getWord() + " " + w.getCount();
-                joiner.add(s);
-            }
-            return joiner.toString();
+            List<WordCountEntry> wordCountEntryMapperOutput = wordInfoMapper(inputSentence);
+            Map<String, Integer> wordCountReducerOutput = wordCountReducer(wordCountEntryMapperOutput);
+            return toOutputFormat(wordCountReducerOutput);
         } catch (Exception e) {
             return "Calculate Error";
         }
 
     }
 
-    private Map<String, List<WordInfo>> getListMap(List<WordInfo> wordInfoList) {
-        Map<String, List<WordInfo>> map = new HashMap<>();
-        for (WordInfo wordInfo : wordInfoList) {
-            if (!map.containsKey(wordInfo.getWord())) {
-                ArrayList arr = new ArrayList<>();
-                arr.add(wordInfo);
-                map.put(wordInfo.getWord(), arr);
-            } else {
-                map.get(wordInfo.getWord()).add(wordInfo);
-            }
-        }
-        return map;
-    }
 }
