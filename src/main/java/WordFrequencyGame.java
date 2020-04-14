@@ -15,25 +15,28 @@ public class WordFrequencyGame {
         return wordCountMapperOutput;
     }
 
+    private List<WordInfo> wordCountReducer(List<WordInfo> wordInfoMapperOutput) {
+        Map<String, List<WordInfo>> map = getListMap(wordInfoMapperOutput);
+
+        List<WordInfo> list = new ArrayList<>();
+        for (Map.Entry<String, List<WordInfo>> entry : map.entrySet()) {
+            WordInfo wordInfo = new WordInfo(entry.getKey(), entry.getValue().size());
+            list.add(wordInfo);
+        }
+        List<WordInfo> wordCountReducerOutput  = list;
+        wordCountReducerOutput.sort((w1, w2) -> w2.getCount() - w1.getCount());
+
+        return wordCountReducerOutput;
+    }
+
 
     public String getResult(String inputSentence) {
         try {
-            List<WordInfo> wordCountMapperOutput = wordInfoMapper(inputSentence);
-
-            //get the map for the next step of sizing the same word
-            Map<String, List<WordInfo>> map = getListMap(wordCountMapperOutput);
-
-            List<WordInfo> list = new ArrayList<>();
-            for (Map.Entry<String, List<WordInfo>> entry : map.entrySet()) {
-                WordInfo wordInfo = new WordInfo(entry.getKey(), entry.getValue().size());
-                list.add(wordInfo);
-            }
-            wordCountMapperOutput = list;
-
-            wordCountMapperOutput.sort((w1, w2) -> w2.getCount() - w1.getCount());
+            List<WordInfo> wordInfoMapperOutput = wordInfoMapper(inputSentence);
+            List<WordInfo> wordInfoReducerOutput = wordCountReducer(wordInfoMapperOutput);
 
             StringJoiner joiner = new StringJoiner("\n");
-            for (WordInfo w : wordCountMapperOutput) {
+            for (WordInfo w : wordInfoReducerOutput) {
                 String s = w.getWord() + " " + w.getCount();
                 joiner.add(s);
             }
